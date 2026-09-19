@@ -2,10 +2,6 @@ name: JevFish live OASIS integration
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - tests/.run-live-oasis
 
 permissions:
   contents: read
