@@ -8,9 +8,11 @@ import asyncio
 
 import run_parallel_simulation_legacy as legacy
 from jevfish_runtime import install_jevfish
+from jevfish_system_two import install_system_two_retry
 
 
-install_jevfish(legacy)
+engine = install_jevfish(legacy)
+install_system_two_retry(engine)
 
 
 if __name__ == "__main__":
