@@ -13,6 +13,10 @@ flask-cors>=6.0.0
 # OpenAI SDK（统一使用 OpenAI 格式调用 LLM）
 openai>=1.0.0
 
+# ============= JevFish / TypeSafe System One =============
+# Jev handles fast structured social decisions; generative actions fall back to the LLM.
+typesafe-sdk
+
 # ============= Zep Cloud =============
 zep-cloud==3.25.0
 httpx>=0.27.0
