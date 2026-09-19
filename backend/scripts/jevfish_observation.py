@@ -192,11 +192,23 @@ def install_oasis_observations(engine: Any) -> Any:
         if refreshed is not None:
             cache[aid] = refreshed
         try:
-            return await original(agent, db_path, platform)
+            # JevDecisionEngine keeps db_path/platform keyword-only. Preserving
+            # that contract matters because these are saved bound methods.
+            return await original(
+                agent,
+                db_path=db_path,
+                platform=platform,
+            )
         finally:
             cache.pop(aid, None)
 
-    async def decide(self: Any, agent: Any, db_path: str, platform: str) -> Any:
+    async def decide(
+        self: Any,
+        agent: Any,
+        *,
+        db_path: str,
+        platform: str,
+    ) -> Any:
         return await _with_observation(
             self,
             original_decide,
@@ -208,6 +220,7 @@ def install_oasis_observations(engine: Any) -> Any:
     async def decide_bundle(
         self: Any,
         agent: Any,
+        *,
         db_path: str,
         platform: str,
     ) -> Any:
