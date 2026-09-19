@@ -149,7 +149,7 @@ async def _refresh_posts(
 
 
 def install_oasis_observations(engine: Any) -> Any:
-    """Install personalized OASIS feed observations on a JevDecisionEngine."""
+    """Install personalized OASIS post-feed observations on a JevDecisionEngine."""
     mode = os.getenv("JEVFISH_OBSERVATION_MODE", "oasis_refresh").strip().lower()
     if mode not in VALID_MODES:
         print(
@@ -191,8 +191,6 @@ def install_oasis_observations(engine: Any) -> Any:
         refreshed = await _refresh_posts(self, agent, db_path)
         if refreshed is not None:
             cache[aid] = refreshed
-        else:
-            self.stats["observation_fallbacks"] += 1
         try:
             return await original(agent, db_path, platform)
         finally:
@@ -224,5 +222,5 @@ def install_oasis_observations(engine: Any) -> Any:
     engine._recent_posts = MethodType(_recent_posts, engine)
     engine.decide = MethodType(decide, engine)
     engine.decide_bundle = MethodType(decide_bundle, engine)
-    print("[JevFish] observation mode=oasis_refresh (personalized OASIS feed)")
+    print("[JevFish] observation mode=oasis_refresh (personalized OASIS post feed)")
     return engine
