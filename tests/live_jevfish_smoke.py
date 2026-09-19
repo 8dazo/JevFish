@@ -162,16 +162,21 @@ async def check_llm() -> dict:
                 "content": "Reply with exactly the single word READY.",
             }
         ],
-        # Muse Spark providers currently require at least 16 output tokens.
-        max_tokens=32,
+        # Muse Spark is a reasoning model: leave enough room for reasoning + visible output.
+        max_tokens=256,
         temperature=0,
+        extra_body={"reasoning": {"effort": "low"}},
     )
     latency_ms = round((time.perf_counter() - start) * 1000, 1)
-    text = (response.choices[0].message.content or "").strip()
+    message = response.choices[0].message
+    text = (message.content or "").strip()
     await client.close()
 
     if "READY" not in text.upper():
-        raise AssertionError(f"Unexpected LLM smoke-test response: {text!r}")
+        finish_reason = getattr(response.choices[0], "finish_reason", None)
+        raise AssertionError(
+            f"Unexpected LLM smoke-test response: {text!r}; finish_reason={finish_reason!r}"
+        )
 
     return {
         "provider": "llm",
@@ -179,6 +184,7 @@ async def check_llm() -> dict:
         "base_url": base_url or "provider default",
         "latency_ms": latency_ms,
         "response": text,
+        "finish_reason": getattr(response.choices[0], "finish_reason", None),
     }
 
 
