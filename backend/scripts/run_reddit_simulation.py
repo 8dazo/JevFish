@@ -7,6 +7,7 @@ This wrapper installs the Jev System-One action layer before running it.
 import asyncio
 
 import run_reddit_simulation_legacy as legacy
+from jevfish_observation import install_oasis_observations
 from jevfish_policy_calibration import install_adaptive_thresholds
 from jevfish_runtime import install_jevfish
 from jevfish_system_two import install_system_two_retry
@@ -14,6 +15,7 @@ from jevfish_system_two import install_system_two_retry
 
 engine = install_jevfish(legacy)
 install_adaptive_thresholds(engine)
+install_oasis_observations(engine)
 install_system_two_retry(engine)
 
 
