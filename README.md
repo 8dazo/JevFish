@@ -1,178 +1,195 @@
 <div align="center">
 
-<img src="./static/image/jevfish/hero.svg" alt="JevFish — System-One swarm simulation" width="100%" />
+<img src="./static/image/jevfish/logo.webp" alt="JevFish" width="220" />
 
 # JevFish
 
-### Fast behavior. Generative language only when it matters.
+### A hybrid swarm simulation engine for exploring possible futures
 
-[![Jev](https://img.shields.io/badge/TypeSafe-Jev-63E6FF?style=flat-square)](https://typesafe.ai/)
-[![OASIS](https://img.shields.io/badge/Simulation-OASIS-7C83FF?style=flat-square)](https://github.com/camel-ai/oasis)
+**Fast System-One behavior. Generative language only when it matters.**
+
+[![TypeSafe Jev](https://img.shields.io/badge/System%20One-TypeSafe%20Jev-F4B400?style=flat-square)](https://typesafe.ai/)
+[![OASIS](https://img.shields.io/badge/Simulation-OASIS-4B7BEC?style=flat-square)](https://github.com/camel-ai/oasis)
 [![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.12-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
-[![License](https://img.shields.io/badge/License-AGPL--3.0-D96CFF?style=flat-square)](./LICENSE)
+[![License](https://img.shields.io/badge/License-AGPL--3.0-111111?style=flat-square)](./LICENSE)
 
-**JevFish is an experimental hybrid social-simulation runtime that uses TypeSafe Jev as a fast System-One behavioral policy and a generative model only for language or genuinely uncertain turns.**
+JevFish turns real-world seed information into a simulated society of agents, then uses **TypeSafe Jev** for high-frequency behavioral decisions and a generative model only when language or deeper reasoning is required.
 
 </div>
-
-A simulated person does not need a full generative-agent turn to decide every like, follow, repost, or no-op. JevFish separates **behavior selection** from **language generation** so more of the simulation budget can go toward agents, rounds, and independent rollouts.
-
-> [!IMPORTANT]
-> JevFish is a simulation system, not an oracle. Frequencies observed across simulated worlds are model-conditioned simulation frequencies, not calibrated real-world probabilities unless separately validated against held-out observations.
-
-## How it works
 
 <div align="center">
-<img src="./static/image/jevfish/hybrid-engine.svg" alt="JevFish hybrid System-One and System-Two engine" width="100%" />
+<img src="./static/image/jevfish/hero.webp" alt="JevFish swarm prediction engine" width="100%" />
 </div>
+
+> [!IMPORTANT]
+> JevFish is a simulation and experimentation system, not an oracle. Frequencies observed across simulated worlds are model-conditioned outcomes, not calibrated real-world probabilities unless they are separately validated against held-out observations.
+
+## ⚡ Overview
+
+Traditional generative-agent simulations often spend a full LLM turn on every small choice: whether an agent should like something, ignore it, follow someone, repost, comment, or write a new post.
+
+JevFish separates those responsibilities.
+
+- **System One — Jev:** fast typed behavioral planning, action gating, and target selection.
+- **System Two — Generative model:** used only when actual language or deeper reasoning is needed.
+- **OASIS — World runtime:** executes the social actions, network effects, and environment dynamics.
+- **MiroFish foundation:** world construction, graph-memory, reporting, and simulation workflow.
+
+The goal is simple: **run richer populations and more independent worlds without paying full generative-agent cost for every micro-decision.**
+
+## 🌍 Our Vision
+
+JevFish is designed around one question:
+
+> What if large social simulations behaved more like real cognition — mostly fast reactions, with expensive reasoning used only when necessary?
+
+That gives us a path toward simulations that can scale in three directions:
+
+- **More agents** — larger populations under the same compute budget.
+- **More rounds** — longer social evolution without multiplying full LLM calls.
+- **More worlds** — repeated stochastic rollouts for counterfactual and Monte Carlo analysis.
+
+The long-term objective is not one deterministic prediction. It is to understand which outcomes are **stable, fragile, or sensitive to interventions** across many simulated worlds.
+
+## 🖥️ Product Direction
+
+<div align="center">
+<img src="./static/image/jevfish/dashboard.webp" alt="JevFish product direction dashboard" width="100%" />
+</div>
+
+> The dashboard above is a product-direction mockup illustrating the experience JevFish is moving toward: scenario setup, live agent activity, network evolution, and outcome analysis in one interface. The simulation runtime described below is already implemented; this exact UI is not presented as a production screenshot.
+
+## 🔄 Workflow
+
+<div align="center">
+<img src="./static/image/jevfish/workflow.webp" alt="JevFish workflow" width="100%" />
+</div>
+
+JevFish follows a five-stage workflow:
+
+1. **Seed Inputs** — ingest documents, reports, news, structured data, or scenario context.
+2. **Build the World** — extract entities, relationships, memory, and graph context.
+3. **Generate Agents** — construct personas, attributes, social relationships, and activity profiles.
+4. **Run Simulation** — agents interact inside OASIS using the JevFish hybrid decision engine.
+5. **Analyze Outcomes** — inspect traces, network changes, behavioral distributions, and reports.
+
+## 🧠 The JevFish Runtime
 
 ```text
 active OASIS agent
        │
        ▼
-persona + recent feed
+persona + recent context
        │
        ▼
       Jev
- one parallel plan
+ one typed behavior plan
        │
-       ├─ refresh? ───────────────┐
-       ├─ like? + target ─────────┤
-       ├─ repost? + target ───────┤
-       ├─ follow? + target ───────┼─→ OASIS ManualAction[]
-       ├─ dislike? + target ──────┤
-       │                          │
-       ├─ create post? ───────────┼─→ System Two writes only the text
-       ├─ quote? + target ────────┤
-       └─ comment? + target ──────┘
+       ├─ like? + target ───────────┐
+       ├─ repost? + target ─────────┤
+       ├─ follow? + target ─────────┤
+       ├─ dislike? + target ────────┼─→ OASIS ManualAction[]
+       │                            │
+       ├─ create post? ─────────────┤
+       ├─ quote? + target ──────────┤
+       └─ comment? + target ────────┘
+                    │
+                    ▼
+       language required?
+          │              │
+         no             yes
+          │              │
+          ▼              ▼
+      execute       System Two writes
+      directly       only the text
 
 low-confidence plan ───────────────→ full OASIS LLMAction fallback
 ```
 
-### V0.2: multi-action policy
+### V0.2 multi-action policy
 
-The default `multi` policy asks Jev several typed questions in one request. Each behavior has its own gate and, where needed, its own target decision. One agent can therefore like a post, follow its author, and create a post during the same OASIS tick without asking a generative model to choose those behaviors.
+The default `multi` policy asks Jev several typed questions in one request. One simulated agent can therefore perform a sparse bundle of actions during the same OASIS tick.
 
-For actions that actually require language, Jev stays in control of the behavior:
+For example:
 
 ```text
-Jev chooses QUOTE + post_17
-             │
-             ▼
-System Two generates commentary only
-             │
-             ▼
-OASIS executes targeted QUOTE_POST
+like post_17        0.91  → execute directly
+follow user_4       0.74  → execute directly
+repost post_12      0.22  → skip
+quote post_17       0.79  → ask System Two for text only
 ```
 
-This is different from handing the whole turn back to an unrestricted LLM agent.
+This is intentionally different from handing the whole turn back to an unrestricted generative agent.
 
-OASIS already supports a list of actions for one agent in one timestep, so JevFish bundles execute without advancing the simulation clock once per micro-action.
+## ✨ Why JevFish
 
-## Decision modes
+| Conventional generative-agent loop | JevFish |
+|---|---|
+| Full LLM turn for every agent decision | Jev plans bounded behavior |
+| Behavior and language are coupled | Behavior and language are separated |
+| Simple likes/follows can require expensive inference | Simple actions execute directly |
+| Scaling agents often scales LLM usage almost linearly | More decisions can stay on System One |
+| One expensive world is common | Designed toward many stochastic worlds |
+
+## 🎛️ Execution Modes
 
 | Mode | Behavior |
 |---|---|
-| `llm` | Exact OASIS baseline: intercepted `LLMAction()` requests remain full LLM agent turns. |
+| `llm` | Baseline OASIS behavior. Intercepted `LLMAction()` requests remain full generative-agent turns. |
 | `hybrid` | **Recommended.** Jev plans behavior; System Two materializes selected language; uncertainty can escalate to the original LLM agent. |
-| `jev` | Structured stress-test mode with no required generative fallback. |
+| `jev` | Structured stress-test mode focused on Jev-driven actions. |
 
-Policy mode is separate:
+Policy mode is configured separately:
 
 | Policy | Behavior |
 |---|---|
-| `multi` | **Default.** One Jev plan can produce a sparse bundle of actions and independent targets. |
-| `single` | Preserved V0.1 one-action router for compatibility and ablations. |
+| `multi` | **Default.** One Jev plan can produce multiple actions with independent targets. |
+| `single` | Preserved V0.1 one-action router for compatibility and ablation experiments. |
 
-## Status
+## ✅ Current Status
 
-**V0.2 is on `main`.**
+**JevFish V0.2 is implemented on `main`.**
 
-Implemented:
+Current runtime capabilities include:
 
-- TypeSafe Jev integration through the official Python SDK;
-- multi-action behavior planning in one Jev call;
+- official TypeSafe Jev Python SDK integration;
+- multi-action behavior planning in a single Jev request;
 - independent target selection for social actions;
 - direct OASIS `ManualAction` bundles;
-- targeted System-Two text generation for posts, quotes, and Reddit comments;
+- targeted System-Two text generation for posts, quotes, and comments;
 - confidence-based full-agent escalation;
 - `llm`, `hybrid`, and `jev` execution modes;
-- `multi` and preserved `single` policy modes;
 - Twitter and Reddit runtime wrappers;
-- per-platform metrics separating Jev plans, constrained text requests, and full LLM fallbacks;
-- controlled hybrid-vs-LLM A/B benchmark harness;
-- provider-backed GitHub Actions tests plus fast unit CI;
-- original simulator bodies preserved as `*_legacy.py` for baseline comparisons.
+- retry handling for empty reasoning-model responses;
+- per-platform Jev/System-Two/fallback metrics;
+- controlled hybrid-vs-LLM A/B benchmark tooling;
+- provider-backed GitHub Actions tests;
+- preserved legacy simulator entrypoints for baseline comparisons.
 
-## Configuration
-
-Copy the example environment:
-
-```bash
-cp .env.example .env
-```
-
-Core configuration:
-
-```env
-# System Two / OpenAI-compatible endpoint
-LLM_API_KEY=...
-LLM_BASE_URL=https://openrouter.ai/api/v1
-LLM_MODEL_NAME=meta/muse-spark-1.3-contributor
-
-# System One / TypeSafe Jev
-TYPESAFE_API_KEY=...
-TYPESAFE_DEFAULT_MODEL=jev-latest
-
-JEVFISH_DECISION_ENGINE=hybrid
-JEVFISH_POLICY_MODE=multi
-JEVFISH_CONFIDENCE_THRESHOLD=0.58
-JEVFISH_MAX_CONTEXT_POSTS=12
-JEVFISH_MAX_ACTIONS_PER_AGENT=3
-JEVFISH_MAX_SYSTEM_TWO_ACTIONS=1
-JEVFISH_SAMPLE_PROBABILITIES=true
-
-# Existing graph-memory pipeline
-ZEP_API_KEY=...
-```
-
-Use `JEVFISH_SAMPLE_PROBABILITIES=false` for deterministic A/B experiments. Enable sampling for stochastic many-world rollouts.
-
-## Run JevFish
-
-Requirements:
-
-- Node.js 18+
-- Python 3.11–3.12
-- `uv`
-- TypeSafe API key
-- OpenAI-compatible LLM key
-- Zep Cloud key for the full graph-memory pipeline
-
-Install and start:
-
-```bash
-npm run setup:all
-npm run dev
-```
-
-Default services:
-
-```text
-frontend  http://localhost:3000
-backend   http://localhost:5001
-```
-
-## Benchmark the thesis
+## 📊 Benchmarking the Thesis
 
 JevFish includes a controlled A/B runner that starts the same synthetic society twice:
 
 ```text
-A  hybrid + multi-action Jev policy
+A  JevFish hybrid + multi-action policy
 B  original LLM-only OASIS policy
 ```
 
-Run:
+The benchmark measures:
+
+- simulation-loop runtime;
+- Jev calls and plans;
+- direct manual actions;
+- constrained System-Two requests;
+- retries and empty responses;
+- full OASIS LLM fallbacks;
+- action distributions from SQLite traces;
+- likes, follows, quotes, reposts, and generated posts;
+- descriptive action-distribution similarity between policies.
+
+A recent small provider-backed test demonstrated that JevFish can replace full LLM agent turns with typed Jev plans and targeted text generation. It also exposed the current bottleneck: if Jev selects too many language-heavy actions, System-Two latency can erase the speed advantage. That is why the next work focuses on **policy calibration**, not headline speed claims.
+
+Run the benchmark yourself:
 
 ```bash
 export TYPESAFE_API_KEY=...
@@ -187,22 +204,90 @@ python benchmarks/jevfish_ab.py \
   --max-actions 3
 ```
 
-The JSON report records:
+> [!NOTE]
+> A short constrained text-generation request and a full OASIS generative-agent turn are different workloads. JevFish reports them separately instead of presenting them as equivalent "LLM calls."
 
-- simulation-loop and total runtime;
-- Jev calls/plans;
-- direct manual actions;
-- constrained System-Two provider requests, successes, retries, and failures;
-- full OASIS LLM agent fallbacks;
-- action distributions from the SQLite trace;
-- posts, follows, likes, quotes, and reposts;
-- action-distribution similarity between the hybrid and LLM policies.
+## 🚀 Quick Start
 
-The benchmark deliberately reports constrained text requests and full LLM agent turns separately. A short text materialization request is not the same workload as an OASIS `LLMAction()` turn.
+### Prerequisites
 
-## Metrics
+| Tool | Version | Purpose |
+|---|---:|---|
+| Node.js | 18+ | Frontend runtime |
+| Python | 3.11–3.12 | Backend runtime |
+| `uv` | latest | Python environment/package management |
+| TypeSafe API key | — | Jev System-One decisions |
+| OpenAI-compatible LLM key | — | System-Two language generation |
+| Zep Cloud key | — | Full graph-memory pipeline |
 
-Each simulation writes:
+### 1. Configure environment variables
+
+```bash
+cp .env.example .env
+```
+
+Core configuration:
+
+```env
+# System Two
+LLM_API_KEY=...
+LLM_BASE_URL=https://openrouter.ai/api/v1
+LLM_MODEL_NAME=meta/muse-spark-1.3-contributor
+
+# System One
+TYPESAFE_API_KEY=...
+TYPESAFE_DEFAULT_MODEL=jev-latest
+
+# JevFish
+JEVFISH_DECISION_ENGINE=hybrid
+JEVFISH_POLICY_MODE=multi
+JEVFISH_CONFIDENCE_THRESHOLD=0.58
+JEVFISH_MAX_CONTEXT_POSTS=12
+JEVFISH_MAX_ACTIONS_PER_AGENT=3
+JEVFISH_MAX_SYSTEM_TWO_ACTIONS=1
+JEVFISH_SAMPLE_PROBABILITIES=true
+
+# Graph memory
+ZEP_API_KEY=...
+```
+
+For deterministic A/B experiments:
+
+```env
+JEVFISH_SAMPLE_PROBABILITIES=false
+```
+
+For many-world stochastic rollouts, enable probability sampling.
+
+### 2. Install dependencies
+
+```bash
+npm run setup:all
+```
+
+### 3. Start JevFish
+
+```bash
+npm run dev
+```
+
+Default services:
+
+```text
+frontend  http://localhost:3000
+backend   http://localhost:5001
+```
+
+### Docker
+
+```bash
+cp .env.example .env
+docker compose up -d
+```
+
+## 📈 Runtime Metrics
+
+Every simulation writes per-platform JevFish metrics:
 
 ```text
 jevfish_twitter_metrics.json
@@ -221,36 +306,38 @@ llm_escalations
 system_two_requests
 system_two_calls
 system_two_retries
+system_two_empty_responses
 system_two_errors
+system_two_latency_ms
 manual_by_type
 selected_by_type
 ```
 
-## Many possible worlds
+These metrics are meant to make the hybrid policy inspectable rather than hiding provider usage behind one aggregate number.
 
-<div align="center">
-<img src="./static/image/jevfish/many-worlds.svg" alt="JevFish many-worlds stochastic simulation concept" width="100%" />
-</div>
+## 🌐 Many Possible Worlds
 
-The larger goal is not one deterministic prediction. It is running many independent worlds under the same starting state and measuring which simulated outcomes are stable versus fragile.
+JevFish is being built toward repeated stochastic simulation rather than a single "answer."
 
 ```text
-                     same initial world
-                            │
-          ┌─────────────────┼─────────────────┐
-          ▼                 ▼                 ▼
-       rollout 1         rollout 2         rollout 3
-          │                 │                 │
-         Jev               Jev               Jev
-          │                 │                 │
-          └─────────────────┼─────────────────┘
-                            ▼
-                  outcome distributions
+                         same initial state
+                                │
+                ┌───────────────┼───────────────┐
+                ▼               ▼               ▼
+             world 1         world 2         world 3
+                │               │               │
+             JevFish         JevFish         JevFish
+                │               │               │
+                └───────────────┼───────────────┘
+                                ▼
+                   outcome distributions
+                                │
+                   stable / fragile / sensitive
 ```
 
-Future experiments will add explicit belief state, activity policies, repeated Monte Carlo worlds, and counterfactual intervention branches.
+Future experiments will add explicit belief state, calibrated activity policies, Monte Carlo rollouts, and intervention branches.
 
-## Architecture
+## 🏗️ Repository Architecture
 
 ```text
 backend/scripts/
@@ -272,22 +359,33 @@ tests/
 └── test_jevfish_benchmark.py
 ```
 
-For the deeper research notes, metrics definitions, caveats, and roadmap, see [`JEVFISH.md`](./JEVFISH.md).
+For deeper implementation notes, metrics definitions, caveats, and research direction, see [`JEVFISH.md`](./JEVFISH.md).
 
-## Research direction
+## 🧪 Research Roadmap
 
-The next questions are empirical:
+The immediate research questions are empirical:
 
-1. How much full generative-agent computation can JevFish remove at a given behavioral similarity target?
-2. Which actions are safe to keep at System-One fidelity, and which require deeper reasoning?
-3. Can explicit belief and activity state improve population dynamics without turning every agent back into an LLM?
-4. How many more independent worlds can the hybrid architecture run under the same time/cost budget?
-5. Can those simulated distributions be calibrated against held-out observations?
+1. How much full generative-agent computation can be removed at a given behavioral-similarity target?
+2. Which social actions belong safely in System One?
+3. How should confidence thresholds vary by action type?
+4. Can belief and activity state improve long-horizon population dynamics?
+5. How many more independent worlds can the hybrid runtime execute under a fixed budget?
+6. Can simulated distributions be calibrated against held-out real observations?
 
-## Upstream foundations
+The next engineering milestone is **action-specific calibration**: make language-heavy actions more selective while preserving the social behavior of the LLM baseline.
 
-JevFish began as a fork of **MiroFish**, preserving its world construction, graph-memory, simulation, interview, and reporting foundation while replacing the high-frequency agent-decision path with JevFish's hybrid runtime.
+## 🙏 Acknowledgments
 
-It also builds directly on **CAMEL-AI OASIS** for the social simulation environment and **TypeSafe AI Jev** for typed System-One decisions.
+JevFish began as a fork of **[MiroFish](https://github.com/666ghj/MiroFish)** and preserves its world-construction, graph-memory, simulation, interaction, and reporting foundation.
 
-Please retain upstream notices and comply with the repository's **AGPL-3.0** license when redistributing modified versions.
+The social environment is powered by **[CAMEL-AI OASIS](https://github.com/camel-ai/oasis)**, and the System-One decision layer is built with **[TypeSafe AI Jev](https://typesafe.ai/)**.
+
+JevFish is distributed under the repository's **AGPL-3.0** license. Please retain upstream notices and comply with the license when redistributing modified versions.
+
+---
+
+<div align="center">
+
+**JevFish — simulate minds, explore possibilities, measure what changes.**
+
+</div>
