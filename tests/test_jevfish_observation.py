@@ -52,11 +52,21 @@ class FakeEngine:
             }
         ]
 
-    async def decide(self, agent, db_path, platform):
+    async def decide(self, agent, *, db_path, platform):
         return self._recent_posts(db_path, agent.social_agent_id)
 
-    async def decide_bundle(self, agent, db_path, platform):
+    async def decide_bundle(self, agent, *, db_path, platform):
         return self._recent_posts(db_path, agent.social_agent_id)
+
+
+def _run_bundle(engine, agent, db_path):
+    return asyncio.run(
+        engine.decide_bundle(
+            agent,
+            db_path=db_path,
+            platform="twitter",
+        )
+    )
 
 
 def _db(tmp_path):
@@ -91,7 +101,7 @@ def test_oasis_refresh_feed_replaces_global_recent_posts(monkeypatch, tmp_path):
     agent = FakeAgent(2, action)
     engine = observation.install_oasis_observations(FakeEngine())
 
-    posts = asyncio.run(engine.decide_bundle(agent, _db(tmp_path), "twitter"))
+    posts = _run_bundle(engine, agent, _db(tmp_path))
 
     assert action.calls == 1
     assert [post["post_id"] for post in posts] == [12]
@@ -109,7 +119,7 @@ def test_recent_mode_preserves_legacy_observation(monkeypatch):
     agent = FakeAgent(2, action)
     engine = observation.install_oasis_observations(FakeEngine())
 
-    posts = asyncio.run(engine.decide_bundle(agent, "missing.db", "twitter"))
+    posts = _run_bundle(engine, agent, "missing.db")
 
     assert action.calls == 0
     assert posts[0]["post_id"] == 999
@@ -122,7 +132,7 @@ def test_empty_refresh_is_preserved_as_empty_feed(monkeypatch):
     agent = FakeAgent(2, action)
     engine = observation.install_oasis_observations(FakeEngine())
 
-    posts = asyncio.run(engine.decide_bundle(agent, "missing.db", "twitter"))
+    posts = _run_bundle(engine, agent, "missing.db")
 
     assert posts == []
     assert engine.stats["observation_empty_refreshes"] == 1
@@ -135,8 +145,8 @@ def test_refresh_error_falls_back_to_recent_posts(monkeypatch):
     agent = FakeAgent(2, action)
     engine = observation.install_oasis_observations(FakeEngine())
 
-    posts = asyncio.run(engine.decide_bundle(agent, "missing.db", "twitter"))
+    posts = _run_bundle(engine, agent, "missing.db")
 
     assert posts[0]["post_id"] == 999
     assert engine.stats["observation_errors"] == 1
-    assert engine.stats["observation_fallbacks"] >= 1
+    assert engine.stats["observation_fallbacks"] == 1
