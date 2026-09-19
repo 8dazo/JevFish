@@ -12,9 +12,13 @@ on:
         required: true
         default: "3"
       threshold:
-        description: Jev confidence threshold
+        description: Base confidence threshold for cheap Jev actions
         required: true
         default: "0.58"
+      generative_threshold:
+        description: Confidence threshold for quote/comment/create-post actions
+        required: true
+        default: "0.72"
       max_actions:
         description: Maximum actions per agent per tick
         required: true
@@ -37,6 +41,8 @@ jobs:
       LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
       LLM_BASE_URL: https://openrouter.ai/api/v1
       LLM_MODEL_NAME: meta/muse-spark-1.3-contributor
+      JEVFISH_GENERATIVE_CONFIDENCE_THRESHOLD: ${{ inputs.generative_threshold || '0.72' }}
+      JEVFISH_TARGET_CONFIDENCE_THRESHOLD: ${{ inputs.threshold || '0.58' }}
 
     steps:
       - name: Checkout
@@ -63,7 +69,7 @@ jobs:
           python benchmarks/jevfish_ab.py \
             --agents "${{ inputs.agents || '5' }}" \
             --rounds "${{ inputs.rounds || '1' }}" \
-            --threshold "${{ inputs.threshold || '0.70' }}" \
+            --threshold "${{ inputs.threshold || '0.58' }}" \
             --max-actions "${{ inputs.max_actions || '3' }}" \
             --output jevfish-ab-report.json
 
