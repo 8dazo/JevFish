@@ -63,7 +63,7 @@ jobs:
           python benchmarks/jevfish_ab.py \
             --agents "${{ inputs.agents || '5' }}" \
             --rounds "${{ inputs.rounds || '1' }}" \
-            --threshold "${{ inputs.threshold || '0.58' }}" \
+            --threshold "${{ inputs.threshold || '0.70' }}" \
             --max-actions "${{ inputs.max_actions || '3' }}" \
             --output jevfish-ab-report.json
 
