@@ -2,10 +2,6 @@ name: JevFish live OASIS LLM baseline
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - tests/.run-live-oasis-llm
 
 permissions:
   contents: read
