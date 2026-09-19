@@ -11,6 +11,7 @@ from jevfish_observation import install_oasis_observations
 from jevfish_policy_calibration import install_adaptive_thresholds
 from jevfish_reproducibility import apply_reproducibility
 from jevfish_runtime import install_jevfish
+from jevfish_step_alignment import install_step_alignment
 from jevfish_system_two import install_system_two_retry
 
 
@@ -18,6 +19,7 @@ engine = install_jevfish(legacy)
 apply_reproducibility(engine)
 install_adaptive_thresholds(engine)
 install_oasis_observations(engine)
+install_step_alignment(engine)
 install_system_two_retry(engine)
 
 
