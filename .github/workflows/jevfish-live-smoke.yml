@@ -1,0 +1,59 @@
+name: JevFish live smoke
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - tests/.run-live-smoke
+
+permissions:
+  contents: read
+
+jobs:
+  live-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
+      TYPESAFE_DEFAULT_MODEL: jev-latest
+      LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+      LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+      LLM_MODEL_NAME: ${{ secrets.LLM_MODEL_NAME }}
+      JEVFISH_DECISION_ENGINE: hybrid
+      JEVFISH_SAMPLE_PROBABILITIES: "false"
+      JEVFISH_CONFIDENCE_THRESHOLD: "0.0"
+      JEVFISH_SMOKE_REPORT: jevfish-live-smoke.json
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install smoke-test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install typesafe-sdk openai
+
+      - name: Validate required secret
+        shell: bash
+        run: |
+          if [ -z "$TYPESAFE_API_KEY" ]; then
+            echo "TYPESAFE_API_KEY repository secret is required" >&2
+            exit 1
+          fi
+
+      - name: Run real JevFish smoke test
+        run: python tests/live_jevfish_smoke.py
+
+      - name: Publish test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jevfish-live-smoke
+          path: jevfish-live-smoke.json
+          if-no-files-found: warn
