@@ -5,28 +5,27 @@ OASIS LLM agents instead call SocialEnvironment.get_posts_env(), which invokes
 that agent's SocialAction.refresh() and therefore uses the platform's real
 recommendation buffer plus following-post logic. This adapter reuses that exact
 refresh action before Jev plans behavior.
+
+The refreshed feed is stored in a ContextVar rather than keyed by agent id. Jev
+plans multiple agents concurrently with ``asyncio.gather()``, so task-local
+context keeps each agent's observation isolated and avoids mismatches between
+OASIS social-agent ids and runtime agent ids.
 """
 
 from __future__ import annotations
 
 import os
 import sqlite3
+from contextvars import ContextVar
 from types import MethodType
 from typing import Any
 
 
 VALID_MODES = {"oasis_refresh", "recent"}
-
-
-def _agent_id(agent: Any) -> int:
-    for name in ("social_agent_id", "agent_id", "id"):
-        value = getattr(agent, name, None)
-        if value is not None:
-            try:
-                return int(value)
-            except (TypeError, ValueError):
-                pass
-    return -1
+_CURRENT_POSTS: ContextVar[list[dict[str, Any]] | None] = ContextVar(
+    "jevfish_current_observation_posts",
+    default=None,
+)
 
 
 def _author_map(db_path: str, user_ids: set[int]) -> dict[int, dict[str, Any]]:
@@ -145,6 +144,8 @@ async def _refresh_posts(
         max_posts=int(getattr(engine, "max_posts", 12)),
     )
     engine.stats["observation_posts"] += len(posts)
+    if not posts:
+        engine.stats["observation_empty_refreshes"] += 1
     return posts
 
 
@@ -165,6 +166,13 @@ def install_oasis_observations(engine: Any) -> Any:
     engine.stats.setdefault("observation_errors", 0)
     engine.stats["observation_mode"] = mode
 
+    # ``llm`` must remain the untouched upstream baseline. OASIS will perform
+    # its own refresh while constructing the LLM observation/prompt.
+    if getattr(engine, "mode", None) == "llm":
+        engine.stats["observation_mode"] = "upstream_llm"
+        print("[JevFish] observation adapter bypassed for exact LLM baseline")
+        return engine
+
     if mode == "recent":
         print("[JevFish] observation mode=recent (legacy SQLite approximation)")
         return engine
@@ -173,13 +181,14 @@ def install_oasis_observations(engine: Any) -> Any:
     original_decide = engine.decide
     original_decide_bundle = engine.decide_bundle
     original_multi_questions = getattr(engine, "_multi_questions", None)
-    cache: dict[int, list[dict[str, Any]]] = {}
 
     def _recent_posts(self: Any, db_path: str, aid: int) -> list[dict[str, Any]]:
-        if aid in cache:
-            return cache[aid]
+        del aid  # The observation is task-local; runtime/social ids need not match.
+        current = _CURRENT_POSTS.get()
+        if current is not None:
+            return current
         self.stats["observation_fallbacks"] += 1
-        return original_recent_posts(db_path, aid)
+        return original_recent_posts(db_path, -1)
 
     def _multi_questions(
         self: Any,
@@ -210,10 +219,10 @@ def install_oasis_observations(engine: Any) -> Any:
         db_path: str,
         platform: str,
     ) -> Any:
-        aid = _agent_id(agent)
         refreshed = await _refresh_posts(self, agent, db_path)
+        token = None
         if refreshed is not None:
-            cache[aid] = refreshed
+            token = _CURRENT_POSTS.set(refreshed)
         try:
             return await original(
                 agent,
@@ -221,7 +230,8 @@ def install_oasis_observations(engine: Any) -> Any:
                 platform=platform,
             )
         finally:
-            cache.pop(aid, None)
+            if token is not None:
+                _CURRENT_POSTS.reset(token)
 
     async def decide(
         self: Any,
