@@ -1,0 +1,32 @@
+name: JevFish tests
+
+on:
+  pull_request:
+    paths:
+      - "backend/scripts/jevfish_runtime.py"
+      - "backend/scripts/run_*simulation*.py"
+      - "tests/test_jevfish_runtime.py"
+      - "backend/requirements.txt"
+      - ".github/workflows/jevfish-tests.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/scripts/jevfish_runtime.py"
+      - "backend/scripts/run_*simulation*.py"
+      - "tests/test_jevfish_runtime.py"
+
+permissions:
+  contents: read
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install --upgrade pip pytest
+      - run: python -m pytest -q tests/test_jevfish_runtime.py
+      - run: python -m py_compile backend/scripts/jevfish_runtime.py backend/scripts/run_parallel_simulation.py backend/scripts/run_twitter_simulation.py backend/scripts/run_reddit_simulation.py
