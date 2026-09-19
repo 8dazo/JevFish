@@ -93,8 +93,6 @@ async def check_jev() -> dict:
     if not os.environ.get("TYPESAFE_API_KEY"):
         raise RuntimeError("TYPESAFE_API_KEY is missing")
 
-    # Keep this deterministic enough for a smoke test while still validating
-    # the real probability-bearing Jev response path.
     os.environ["JEVFISH_DECISION_ENGINE"] = "hybrid"
     os.environ["JEVFISH_CONFIDENCE_THRESHOLD"] = "0.0"
     os.environ["JEVFISH_SAMPLE_PROBABILITIES"] = "false"
@@ -164,7 +162,8 @@ async def check_llm() -> dict:
                 "content": "Reply with exactly the single word READY.",
             }
         ],
-        max_tokens=8,
+        # Muse Spark providers currently require at least 16 output tokens.
+        max_tokens=32,
         temperature=0,
     )
     latency_ms = round((time.perf_counter() - start) * 1000, 1)
@@ -184,12 +183,21 @@ async def check_llm() -> dict:
 
 
 async def main() -> None:
-    report = {
-        "jev": await check_jev(),
-        "llm": await check_llm(),
-    }
     output = Path(os.environ.get("JEVFISH_SMOKE_REPORT", "jevfish-live-smoke.json"))
-    output.write_text(json.dumps(report, indent=2), encoding="utf-8")
+    report: dict = {}
+
+    try:
+        report["jev"] = await check_jev()
+        output.write_text(json.dumps(report, indent=2), encoding="utf-8")
+
+        report["llm"] = await check_llm()
+        output.write_text(json.dumps(report, indent=2), encoding="utf-8")
+    except Exception as exc:
+        report["error"] = {"type": type(exc).__name__, "message": str(exc)}
+        output.write_text(json.dumps(report, indent=2), encoding="utf-8")
+        print(json.dumps(report, indent=2))
+        raise
+
     print(json.dumps(report, indent=2))
 
 
