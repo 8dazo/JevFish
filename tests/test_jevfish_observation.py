@@ -52,6 +52,9 @@ class FakeEngine:
             }
         ]
 
+    def _multi_questions(self, Choice, *, platform, posts):
+        return {"refresh": object(), "like": object()}
+
     async def decide(self, agent, *, db_path, platform):
         return self._recent_posts(db_path, agent.social_agent_id)
 
@@ -113,17 +116,33 @@ def test_oasis_refresh_feed_replaces_global_recent_posts(monkeypatch, tmp_path):
     assert engine.stats["observation_fallbacks"] == 0
 
 
-def test_recent_mode_preserves_legacy_observation(monkeypatch):
+def test_exact_feed_mode_removes_duplicate_refresh_question(monkeypatch):
+    monkeypatch.setenv("JEVFISH_OBSERVATION_MODE", "oasis_refresh")
+    engine = observation.install_oasis_observations(FakeEngine())
+
+    questions = engine._multi_questions(
+        object,
+        platform="twitter",
+        posts=[],
+    )
+
+    assert "refresh" not in questions
+    assert "like" in questions
+
+
+def test_recent_mode_preserves_legacy_observation_and_refresh_gate(monkeypatch):
     monkeypatch.setenv("JEVFISH_OBSERVATION_MODE", "recent")
     action = FakeAction({"success": True, "posts": []})
     agent = FakeAgent(2, action)
     engine = observation.install_oasis_observations(FakeEngine())
 
     posts = _run_bundle(engine, agent, "missing.db")
+    questions = engine._multi_questions(object, platform="twitter", posts=[])
 
     assert action.calls == 0
     assert posts[0]["post_id"] == 999
     assert engine.stats["observation_mode"] == "recent"
+    assert "refresh" in questions
 
 
 def test_empty_refresh_is_preserved_as_empty_feed(monkeypatch):
