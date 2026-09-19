@@ -183,12 +183,11 @@ def install_oasis_observations(engine: Any) -> Any:
     original_multi_questions = getattr(engine, "_multi_questions", None)
 
     def _recent_posts(self: Any, db_path: str, aid: int) -> list[dict[str, Any]]:
-        del aid  # The observation is task-local; runtime/social ids need not match.
         current = _CURRENT_POSTS.get()
         if current is not None:
             return current
         self.stats["observation_fallbacks"] += 1
-        return original_recent_posts(db_path, -1)
+        return original_recent_posts(db_path, aid)
 
     def _multi_questions(
         self: Any,
