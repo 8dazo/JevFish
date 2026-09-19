@@ -5,6 +5,10 @@ Each trial gives the hybrid and baseline arms the same local/OASIS seed. Trial
 order alternates to reduce systematic provider/time-order bias. Remote model
 providers can remain nondeterministic, so the report summarizes distributions
 rather than treating the seed as exact end-to-end determinism.
+
+A trial is only accepted as benchmark evidence when the hybrid arm consumes the
+personalized OASIS recommendation feed without observation fallback and the LLM
+arm remains the untouched upstream baseline.
 """
 
 from __future__ import annotations
@@ -26,7 +30,14 @@ def _numeric(values: list[Any]) -> list[float]:
 def summarize(values: list[Any]) -> dict[str, float | int | None]:
     numbers = _numeric(values)
     if not numbers:
-        return {"count": 0, "mean": None, "median": None, "stdev": None, "min": None, "max": None}
+        return {
+            "count": 0,
+            "mean": None,
+            "median": None,
+            "stdev": None,
+            "min": None,
+            "max": None,
+        }
     return {
         "count": len(numbers),
         "mean": round(statistics.fmean(numbers), 4),
@@ -75,7 +86,45 @@ def aggregate(trials: list[dict[str, Any]]) -> dict[str, Any]:
                 for trial in trials
             ]
         ),
+        "hybrid_observation_posts": summarize(
+            [
+                trial["hybrid"].get("metrics", {}).get("observation_posts")
+                for trial in trials
+            ]
+        ),
+        "hybrid_observation_fallbacks": summarize(
+            [
+                trial["hybrid"].get("metrics", {}).get("observation_fallbacks")
+                for trial in trials
+            ]
+        ),
+        "hybrid_observation_errors": summarize(
+            [
+                trial["hybrid"].get("metrics", {}).get("observation_errors")
+                for trial in trials
+            ]
+        ),
     }
+
+
+def validate_trial(trial: dict[str, Any]) -> list[str]:
+    """Return reasons a trial should not be used as benchmark evidence."""
+    problems: list[str] = []
+    hybrid_metrics = trial["hybrid"].get("metrics", {})
+    llm_metrics = trial["llm"].get("metrics", {})
+
+    if hybrid_metrics.get("observation_mode") != "oasis_refresh":
+        problems.append("hybrid did not use oasis_refresh observations")
+    if int(hybrid_metrics.get("observation_fallbacks") or 0) != 0:
+        problems.append("hybrid observation fallback occurred")
+    if int(hybrid_metrics.get("observation_errors") or 0) != 0:
+        problems.append("hybrid observation error occurred")
+    if int(hybrid_metrics.get("observation_posts") or 0) <= 0:
+        problems.append("hybrid received no personalized observation posts")
+    if llm_metrics.get("observation_mode") != "upstream_llm":
+        problems.append("LLM arm is not the untouched upstream observation baseline")
+
+    return problems
 
 
 def main() -> None:
@@ -129,6 +178,7 @@ def main() -> None:
 
     try:
         trials: list[dict[str, Any]] = []
+        invalid_reasons: list[dict[str, Any]] = []
         for index in range(args.trials):
             seed = args.seed + index
             os.environ["JEVFISH_SEED"] = str(seed)
@@ -159,10 +209,17 @@ def main() -> None:
                     rounds=args.rounds,
                 ),
             }
+            problems = validate_trial(trial)
+            trial["benchmark_valid"] = not problems
+            trial["validation_problems"] = problems
+            if problems:
+                invalid_reasons.append({"trial": index + 1, "problems": problems})
             trials.append(trial)
 
         report["trials"] = trials
         report["aggregate"] = aggregate(trials)
+        report["benchmark_valid"] = not invalid_reasons
+        report["invalid_trials"] = invalid_reasons
         report["passed"] = True
     except Exception as exc:
         report["passed"] = False
@@ -177,6 +234,9 @@ def main() -> None:
         json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8"
     )
     print(json.dumps(report, indent=2, ensure_ascii=False))
+
+    if not report["benchmark_valid"]:
+        raise SystemExit("Repeated trials completed but failed benchmark validity checks")
 
 
 if __name__ == "__main__":
