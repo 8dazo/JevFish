@@ -28,6 +28,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 RUNNER = ROOT / "backend" / "scripts" / "run_twitter_simulation.py"
 SEED_POST_COUNT = 2
+OBSERVATION_ACTIONS = {"sign_up", "refresh"}
 
 PERSONAS = [
     (
@@ -213,10 +214,18 @@ def database_summary(db_path: Path) -> dict[str, Any]:
 
 
 def adjusted_behavior_counts(raw: dict[str, int]) -> dict[str, int]:
+    """Return externally visible social actions used for policy comparison.
+
+    ``sign_up`` is simulation setup and ``refresh`` is an observation/tool action,
+    not a social behavior. JevFish currently reads its compact observation from
+    the simulation database instead of issuing the OASIS refresh tool, so counting
+    refresh as a behavior mismatch would compare observation plumbing rather than
+    the agents' externally visible actions.
+    """
     counts = {
         str(action): int(count)
         for action, count in raw.items()
-        if action != "sign_up" and int(count) > 0
+        if action not in OBSERVATION_ACTIONS and int(count) > 0
     }
     if "create_post" in counts:
         counts["create_post"] = max(
@@ -416,9 +425,10 @@ def compare(
         "note": (
             "A constrained System-Two request and a full OASIS LLM agent turn "
             "are different workloads, so request/turn counts are reported "
-            "separately as well as combined. Action-distribution similarity "
-            "is descriptive agreement between these two simulation policies, "
-            "not real-world predictive accuracy."
+            "separately as well as combined. Observation/tool actions such as "
+            "refresh are excluded from behavioral similarity. The similarity "
+            "metric is descriptive agreement between these two simulation "
+            "policies, not real-world predictive accuracy."
         ),
     }
 
