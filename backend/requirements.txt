@@ -1,5 +1,5 @@
 # ===========================================
-# MiroFish Backend Dependencies
+# JevFish Backend Dependencies
 # ===========================================
 # Python 3.11+ required
 # Install: pip install -r requirements.txt
@@ -13,11 +13,15 @@ flask-cors>=6.0.0
 # OpenAI SDK（统一使用 OpenAI 格式调用 LLM）
 openai>=1.0.0
 
+# CAMEL 0.2.78 imports FastMCP from the MCP v1 package layout.
+# mcp v2 removed that compatibility path, so keep this bounded until CAMEL is upgraded.
+mcp>=1.3.0,<2
+
 # ============= JevFish / TypeSafe System One =============
 # Jev handles fast structured social decisions; generative actions fall back to the LLM.
 typesafe-sdk
 
-# ============= Zep Cloud =============
+# ============= ZEP记忆图谱配置 =============
 zep-cloud==3.25.0
 httpx>=0.27.0
 
