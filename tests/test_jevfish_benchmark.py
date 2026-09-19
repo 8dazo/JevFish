@@ -9,10 +9,11 @@ assert spec and spec.loader
 spec.loader.exec_module(benchmark)
 
 
-def test_adjusted_behavior_counts_removes_admin_and_seed_posts():
+def test_adjusted_behavior_counts_removes_observation_actions_and_seed_posts():
     adjusted = benchmark.adjusted_behavior_counts(
         {
             "sign_up": 5,
+            "refresh": 5,
             "create_post": 5,
             "like_post": 7,
             "follow": 2,
@@ -52,6 +53,7 @@ def test_compare_counts_every_expensive_request_and_speedup():
         "database": {
             "trace_actions": {
                 "sign_up": 5,
+                "refresh": 5,
                 "create_post": 3,
                 "like_post": 5,
                 "follow": 1,
@@ -65,6 +67,7 @@ def test_compare_counts_every_expensive_request_and_speedup():
         "database": {
             "trace_actions": {
                 "sign_up": 5,
+                "refresh": 5,
                 "create_post": 4,
                 "like_post": 6,
                 "follow": 2,
@@ -84,6 +87,8 @@ def test_compare_counts_every_expensive_request_and_speedup():
     assert result["expensive_request_or_turn_delta"] == 0
     assert result["expensive_request_or_turn_reduction_pct"] == 0.0
     assert result["runtime_speedup"] == 2.5
+    assert "refresh" not in result["hybrid_behavior_actions"]
+    assert "refresh" not in result["llm_behavior_actions"]
     assert 0.0 <= result["action_distribution_similarity"] <= 1.0
 
 
