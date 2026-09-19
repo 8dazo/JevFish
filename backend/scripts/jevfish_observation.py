@@ -172,6 +172,7 @@ def install_oasis_observations(engine: Any) -> Any:
     original_recent_posts = engine._recent_posts
     original_decide = engine.decide
     original_decide_bundle = engine.decide_bundle
+    original_multi_questions = getattr(engine, "_multi_questions", None)
     cache: dict[int, list[dict[str, Any]]] = {}
 
     def _recent_posts(self: Any, db_path: str, aid: int) -> list[dict[str, Any]]:
@@ -179,6 +180,28 @@ def install_oasis_observations(engine: Any) -> Any:
             return cache[aid]
         self.stats["observation_fallbacks"] += 1
         return original_recent_posts(db_path, aid)
+
+    def _multi_questions(
+        self: Any,
+        Choice: Any,
+        *,
+        platform: str,
+        posts: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        if original_multi_questions is None:
+            return {}
+        questions = dict(
+            original_multi_questions(
+                Choice,
+                platform=platform,
+                posts=posts,
+            )
+        )
+        # ``refresh()`` has already been executed to construct the observation,
+        # matching OASIS's pre-LLM prompt path. Asking Jev to choose REFRESH again
+        # would create a duplicate observation/tool action in the same tick.
+        questions.pop("refresh", None)
+        return questions
 
     async def _with_observation(
         self: Any,
@@ -192,8 +215,6 @@ def install_oasis_observations(engine: Any) -> Any:
         if refreshed is not None:
             cache[aid] = refreshed
         try:
-            # JevDecisionEngine keeps db_path/platform keyword-only. Preserving
-            # that contract matters because these are saved bound methods.
             return await original(
                 agent,
                 db_path=db_path,
@@ -233,6 +254,8 @@ def install_oasis_observations(engine: Any) -> Any:
         )
 
     engine._recent_posts = MethodType(_recent_posts, engine)
+    if original_multi_questions is not None:
+        engine._multi_questions = MethodType(_multi_questions, engine)
     engine.decide = MethodType(decide, engine)
     engine.decide_bundle = MethodType(decide_bundle, engine)
     print("[JevFish] observation mode=oasis_refresh (personalized OASIS post feed)")
