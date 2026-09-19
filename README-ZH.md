@@ -1,203 +1,80 @@
 <div align="center">
 
-<img src="./static/image/MiroFish_logo_compressed.jpeg" alt="MiroFish Logo" width="75%"/>
+<img src="./static/image/jevfish/logo.webp" alt="JevFish" width="220" />
 
-<a href="https://trendshift.io/repositories/16144" target="_blank"><img src="https://trendshift.io/api/badge/repositories/16144" alt="666ghj%2FMiroFish | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+# JevFish
 
-简洁通用的群体智能引擎，预测万物
-</br>
-<em>A Simple and Universal Swarm Intelligence Engine, Predicting Anything</em>
+### System-One / System-Two 混合群体模拟引擎
 
-<a href="https://www.shanda.com/" target="_blank"><img src="./static/image/shanda_logo.png" alt="666ghj%2FMiroFish | Shanda" height="40"/></a>
+**让 Jev 处理高频行为决策，只在真正需要语言时调用生成式模型。**
 
-[![GitHub Stars](https://img.shields.io/github/stars/666ghj/MiroFish?style=flat-square&color=DAA520)](https://github.com/666ghj/MiroFish/stargazers)
-[![GitHub Watchers](https://img.shields.io/github/watchers/666ghj/MiroFish?style=flat-square)](https://github.com/666ghj/MiroFish/watchers)
-[![GitHub Forks](https://img.shields.io/github/forks/666ghj/MiroFish?style=flat-square)](https://github.com/666ghj/MiroFish/network)
-[![Docker](https://img.shields.io/badge/Docker-Build-2496ED?style=flat-square&logo=docker&logoColor=white)](https://hub.docker.com/)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/666ghj/MiroFish)
-
-[![Discord](https://img.shields.io/badge/Discord-Join-5865F2?style=flat-square&logo=discord&logoColor=white)](http://discord.gg/ePf5aPaHnA)
-[![X](https://img.shields.io/badge/X-Follow-000000?style=flat-square&logo=x&logoColor=white)](https://x.com/mirofish_ai)
-[![Instagram](https://img.shields.io/badge/Instagram-Follow-E4405F?style=flat-square&logo=instagram&logoColor=white)](https://www.instagram.com/mirofish_ai/)
-
-[English](./README.md) | [中文文档](./README-ZH.md)
+[English README](./README.md) · [技术说明](./JEVFISH.md)
 
 </div>
-
-## ⚡ 项目概述
-
-**MiroFish** 是一款基于多智能体技术的新一代 AI 预测引擎。通过提取现实世界的种子信息（如突发新闻、政策草案、金融信号），自动构建出高保真的平行数字世界。在此空间内，成千上万个具备独立人格、长期记忆与行为逻辑的智能体进行自由交互与社会演化。你可透过「上帝视角」动态注入变量，精准推演未来走向——**让未来在数字沙盘中预演，助决策在百战模拟后胜出**。
-
-> 你只需：上传种子材料（数据分析报告或者有趣的小说故事），并用自然语言描述预测需求</br>
-> MiroFish 将返回：一份详尽的预测报告，以及一个可深度交互的高保真数字世界
-
-### 我们的愿景
-
-MiroFish 致力于打造映射现实的群体智能镜像，通过捕捉个体互动引发的群体涌现，突破传统预测的局限：
-
-- **于宏观**：我们是决策者的预演实验室，让政策与公关在零风险中试错
-- **于微观**：我们是个人用户的创意沙盘，无论是推演小说结局还是探索脑洞，皆可有趣、好玩、触手可及
-
-从严肃预测到趣味仿真，我们让每一个如果都能看见结果，让预测万物成为可能。
-
-## 🌐 在线体验
-
-欢迎访问在线 Demo 演示环境，体验我们为你准备的一次关于热点舆情事件的推演预测：[mirofish-live-demo](https://666ghj.github.io/mirofish-demo/)
-
-## 📸 系统截图
 
 <div align="center">
-<table>
-<tr>
-<td><img src="./static/image/Screenshot/运行截图1.png" alt="截图1" width="100%"/></td>
-<td><img src="./static/image/Screenshot/运行截图2.png" alt="截图2" width="100%"/></td>
-</tr>
-<tr>
-<td><img src="./static/image/Screenshot/运行截图3.png" alt="截图3" width="100%"/></td>
-<td><img src="./static/image/Screenshot/运行截图4.png" alt="截图4" width="100%"/></td>
-</tr>
-<tr>
-<td><img src="./static/image/Screenshot/运行截图5.png" alt="截图5" width="100%"/></td>
-<td><img src="./static/image/Screenshot/运行截图6.png" alt="截图6" width="100%"/></td>
-</tr>
-</table>
+<img src="./static/image/jevfish/hero.webp" alt="JevFish" width="100%" />
 </div>
 
-## 🎬 演示视频
+## 项目简介
 
-### 1. 武汉大学舆情推演预测 + MiroFish项目讲解
+JevFish 是一个建立在 MiroFish 与 CAMEL-AI OASIS 之上的实验性混合群体模拟项目。
 
-<div align="center">
-<a href="https://www.bilibili.com/video/BV1VYBsBHEMY/" target="_blank"><img src="./static/image/武大模拟演示封面.png" alt="MiroFish Demo Video" width="75%"/></a>
+传统生成式 Agent 模拟通常会把每一次活跃 Agent 回合都交给大语言模型。JevFish 尝试把这类工作拆成两层：
 
-点击图片查看使用微舆BettaFish生成的《武大舆情报告》进行预测的完整演示视频
-</div>
+- **System One / TypeSafe Jev**：负责点赞、关注、转发、忽略、是否发言等高频、结构化行为决策，以及目标选择。
+- **System Two / 生成式模型**：只在 Agent 已经决定需要写帖子、评论或引用内容时生成自然语言；低置信度时也可以回退到完整 OASIS LLM Agent。
+- **OASIS**：继续负责社交平台、推荐系统、关系网络、动作执行与模拟时钟。
+- **MiroFish**：保留世界构建、图谱记忆、模拟流程与报告等上层基础能力。
 
-### 2. 《红楼梦》失传结局推演预测
+JevFish 的研究问题不是“能不能把 LLM 全部替换掉”，而是：**在保持足够行为相似度的前提下，有多少高频 Agent 决策可以交给更快、更受约束的 System-One 模型？**
 
-<div align="center">
-<a href="https://www.bilibili.com/video/BV1cPk3BBExq" target="_blank"><img src="./static/image/红楼梦模拟推演封面.jpg" alt="MiroFish Demo Video" width="75%"/></a>
+> JevFish 是模拟与实验系统，不是现实世界预言机。模拟世界中的频率不等同于经过校准的现实概率，除非另外使用真实、留出数据完成验证。
 
-点击图片查看基于《红楼梦》前80回数十万字，MiroFish深度预测失传结局
-</div>
+## 当前状态
 
-> **金融方向推演预测**、**时政要闻推演预测**等示例陆续更新中...
+主分支已经实现：
 
-## 🔄 工作流程
+- Jev 多动作行为规划；
+- 每个动作独立目标选择；
+- OASIS `ManualAction[]` 直接执行；
+- 仅针对语言动作调用 System Two；
+- `llm` / `hybrid` / `jev` 三种运行模式；
+- Twitter 与 Reddit 模拟入口；
+- 自适应、按动作划分的置信度阈值；
+- Jev / System-Two / fallback 指标；
+- Hybrid 与原始 LLM-only OASIS 的 A/B benchmark；
+- 可复现种子与重复配对实验工具；
+- provider-backed GitHub Actions 测试。
 
-1. **图谱构建**：现实种子提取 & 个体与群体记忆注入 & GraphRAG构建
-2. **环境搭建**：实体关系抽取 & 人设生成 & 环境配置Agent注入仿真参数
-3. **开始模拟**：双平台并行模拟 & 自动解析预测需求 & 动态更新时序记忆
-4. **报告生成**：ReportAgent拥有丰富的工具集与模拟后环境进行深度交互
-5. **深度互动**：与模拟世界中的任意一位进行对话 & 与ReportAgent进行对话
-
-## 🚀 快速开始
-
-### 一、源码部署（推荐）
-
-#### 前置要求
-
-| 工具 | 版本要求 | 说明 | 安装检查 |
-|------|---------|------|---------|
-| **Node.js** | 18+ | 前端运行环境，包含 npm | `node -v` |
-| **Python** | ≥3.11, ≤3.12 | 后端运行环境 | `python --version` |
-| **uv** | 最新版 | Python 包管理器 | `uv --version` |
-
-#### 1. 配置环境变量
+## 快速开始
 
 ```bash
-# 复制示例配置文件
 cp .env.example .env
-
-# 编辑 .env 文件，填入必要的 API 密钥
-```
-
-**必需的环境变量：**
-
-```env
-# LLM API配置（支持 OpenAI SDK 格式的任意 LLM API）
-# 推荐使用阿里百炼平台qwen-plus模型：https://bailian.console.aliyun.com/
-# 注意消耗较大，可先进行小于40轮的模拟尝试
-LLM_API_KEY=your_api_key
-LLM_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
-LLM_MODEL_NAME=qwen-plus
-
-# Zep Cloud 配置
-# 每月免费额度即可支撑简单使用：https://app.getzep.com/
-ZEP_API_KEY=your_zep_api_key
-```
-
-#### 2. 安装依赖
-
-```bash
-# 一键安装所有依赖（根目录 + 前端 + 后端）
 npm run setup:all
-```
-
-或者分步安装：
-
-```bash
-# 安装 Node 依赖（根目录 + 前端）
-npm run setup
-
-# 安装 Python 依赖（后端，自动创建虚拟环境）
-npm run setup:backend
-```
-
-#### 3. 启动服务
-
-```bash
-# 同时启动前后端（在项目根目录执行）
 npm run dev
 ```
 
-**服务地址：**
-- 前端：`http://localhost:3000`
-- 后端 API：`http://localhost:5001`
+核心环境变量：
 
-**单独启动：**
+```env
+TYPESAFE_API_KEY=...
+TYPESAFE_DEFAULT_MODEL=jev-latest
 
-```bash
-npm run backend   # 仅启动后端
-npm run frontend  # 仅启动前端
+LLM_API_KEY=...
+LLM_BASE_URL=https://openrouter.ai/api/v1
+LLM_MODEL_NAME=meta/muse-spark-1.3-contributor
+
+JEVFISH_DECISION_ENGINE=hybrid
+JEVFISH_POLICY_MODE=multi
+JEVFISH_CONFIDENCE_THRESHOLD=0.58
+JEVFISH_GENERATIVE_CONFIDENCE_THRESHOLD=0.72
 ```
 
-### 二、Docker 部署
+完整安装、benchmark、指标定义、当前实验限制与研究路线请以 **[README.md](./README.md)** 为准。
 
-```bash
-# 1. 配置环境变量（同源码部署）
-cp .env.example .env
+## 上游与许可
 
-# 2. 拉取镜像并启动
-docker compose up -d
-```
+JevFish 源自 **[MiroFish](https://github.com/666ghj/MiroFish)**，社交模拟运行时使用 **[CAMEL-AI OASIS](https://github.com/camel-ai/oasis)**，System-One 决策层使用 **[TypeSafe AI Jev](https://typesafe.ai/)**。
 
-默认会读取根目录下的 `.env`，并映射端口 `3000（前端）/5001（后端）`
-
-> 在 `docker-compose.yml` 中已通过注释提供加速镜像地址，可按需替换
-
-## 📬 更多交流
-
-<div align="center">
-<img src="./static/image/QQ群.png" alt="QQ交流群" width="60%"/>
-</div>
-
-&nbsp;
-
-MiroFish团队长期招募全职/实习，如果你对多Agent应用感兴趣，欢迎投递简历至：**mirofish@shanda.com**
-
-## 📄 致谢
-
-**MiroFish 得到了盛大集团的战略支持和孵化！**
-
-MiroFish 的仿真引擎由 **[OASIS](https://github.com/camel-ai/oasis)** 驱动，我们衷心感谢 CAMEL-AI 团队的开源贡献！
-
-## 📈 项目统计
-
-<a href="https://github.com/666ghj/MiroFish">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="static/image/star-history-dark.svg" />
-   <source media="(prefers-color-scheme: light)" srcset="static/image/star-history-light.svg" />
-   <img alt="666ghj/MiroFish Star History Chart" src="static/image/star-history-light.svg" />
- </picture>
-</a>
+本仓库继续遵循 **AGPL-3.0** 许可。再分发修改版本时请保留必要的上游声明并遵守对应许可条款。
