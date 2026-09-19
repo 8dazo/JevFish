@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="650" viewBox="0 0 1200 650" role="img" aria-labelledby="title desc">
+  <title id="title">JevFish hybrid System-One and System-Two engine</title>
+  <desc id="desc">Diagram showing agent state entering Jev, bounded decisions going directly to OASIS, and uncertain or language actions falling back to an LLM.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#081220"/><stop offset="1" stop-color="#0d1830"/></linearGradient>
+    <linearGradient id="jev" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#42e8ff"/><stop offset="1" stop-color="#7c83ff"/></linearGradient>
+    <linearGradient id="llm" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#8e7cff"/><stop offset="1" stop-color="#e46cff"/></linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#9cc2e7" stroke-opacity=".055"/></pattern>
+    <filter id="shadow"><feDropShadow dx="0" dy="12" stdDeviation="18" flood-color="#000" flood-opacity=".25"/></filter>
+  </defs>
+  <rect width="1200" height="650" rx="26" fill="url(#bg)"/>
+  <rect width="1200" height="650" rx="26" fill="url(#grid)"/>
+
+  <text x="60" y="72" fill="#f3f8ff" font-family="Inter,ui-sans-serif,system-ui,sans-serif" font-size="34" font-weight="800">Hybrid decision engine</text>
+  <text x="60" y="105" fill="#829bb9" font-family="Inter,ui-sans-serif,system-ui,sans-serif" font-size="17">Jev handles fast bounded behavior. The LLM only wakes up when language or deeper reasoning is needed.</text>
+
+  <g filter="url(#shadow)" font-family="Inter,ui-sans-serif,system-ui,sans-serif">
+    <rect x="62" y="182" width="235" height="260" rx="24" fill="#0c1b2b" stroke="#2c4561"/>
+    <text x="88" y="219" fill="#6e8aa8" font-size="12" font-weight="800" letter-spacing="1.5">AGENT STATE</text>
+    <text x="88" y="258" fill="#edf6ff" font-size="21" font-weight="800">Persona + context</text>
+    <g font-size="15" fill="#a8bdd3">
+      <text x="88" y="302">• interests &amp; traits</text>
+      <text x="88" y="334">• recent feed</text>
+      <text x="88" y="366">• current hour</text>
+      <text x="88" y="398">• candidate targets</text>
+    </g>
+
+    <rect x="392" y="182" width="258" height="260" rx="24" fill="#0b1f31" stroke="#5fdff4" stroke-opacity=".48"/>
+    <rect x="418" y="208" width="82" height="28" rx="14" fill="url(#jev)"/>
+    <text x="459" y="227" text-anchor="middle" fill="#07111f" font-size="12" font-weight="900" letter-spacing="1.2">SYSTEM ONE</text>
+    <text x="418" y="276" fill="#effcff" font-size="28" font-weight="900">Jev</text>
+    <text x="418" y="309" fill="#9ec7d8" font-size="15">typed probabilistic decisions</text>
+    <g font-size="14" fill="#b6dce9">
+      <text x="418" y="350">action → probability</text>
+      <text x="418" y="381">target → probability</text>
+      <text x="418" y="412">confidence → fallback gate</text>
+    </g>
+
+    <rect x="756" y="145" width="366" height="210" rx="24" fill="#0b1a28" stroke="#4d6a84"/>
+    <text x="782" y="181" fill="#6e8aa8" font-size="12" font-weight="800" letter-spacing="1.5">FAST PATH</text>
+    <text x="782" y="219" fill="#f0f7ff" font-size="22" font-weight="800">Direct OASIS actions</text>
+    <g font-size="15" fill="#b5cadf">
+      <text x="782" y="260">IGNORE · LIKE · REPOST</text>
+      <text x="782" y="292">DISLIKE · FOLLOW</text>
+    </g>
+    <rect x="782" y="312" width="142" height="26" rx="13" fill="#102b30" stroke="#56d8cf" stroke-opacity=".35"/>
+    <text x="853" y="330" text-anchor="middle" fill="#8be9df" font-size="12" font-weight="800">NO LLM CALL</text>
+
+    <rect x="756" y="405" width="366" height="170" rx="24" fill="#17162d" stroke="#9b7dff" stroke-opacity=".45"/>
+    <rect x="782" y="429" width="94" height="27" rx="14" fill="url(#llm)"/>
+    <text x="829" y="448" text-anchor="middle" fill="#fff" font-size="12" font-weight="900">SYSTEM TWO</text>
+    <text x="782" y="490" fill="#f5efff" font-size="22" font-weight="800">Generative LLM fallback</text>
+    <text x="782" y="522" fill="#c1b4d9" font-size="14">create post · comment · quote · uncertainty</text>
+    <text x="782" y="548" fill="#9d8cb9" font-size="13">Only used when bounded decisions are not enough.</text>
+  </g>
+
+  <g fill="none" stroke-linecap="round">
+    <path d="M297 312H370" stroke="#54718d" stroke-width="3"/>
+    <path d="M650 276C704 276 706 248 736 248" stroke="#60dff0" stroke-width="3"/>
+    <path d="M650 351C710 351 701 486 736 486" stroke="#9b7dff" stroke-width="3"/>
+  </g>
+  <g fill="#7996b5"><path d="M365 305l13 7-13 7z"/><path d="M731 241l13 7-13 7z"/><path d="M731 479l13 7-13 7z"/></g>
+
+  <g font-family="Inter,ui-sans-serif,system-ui,sans-serif" font-size="12" font-weight="800">
+    <rect x="658" y="233" width="72" height="24" rx="12" fill="#0b2732"/><text x="694" y="249" text-anchor="middle" fill="#77e9f6">CONFIDENT</text>
+    <rect x="657" y="394" width="78" height="24" rx="12" fill="#211d3f"/><text x="696" y="410" text-anchor="middle" fill="#c6b7ff">UNCERTAIN</text>
+  </g>
+
+  <text x="60" y="601" fill="#58718d" font-family="Inter,ui-sans-serif,system-ui,sans-serif" font-size="13">The original MiroFish/OASIS loop remains reproducible with JEVFISH_DECISION_ENGINE=llm.</text>
+  <rect x="1" y="1" width="1198" height="648" rx="25" fill="none" stroke="#9edcff" stroke-opacity=".07" stroke-width="2"/>
+</svg>
