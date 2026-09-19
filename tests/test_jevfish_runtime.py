@@ -23,6 +23,10 @@ class ActionType(Enum):
     REPOST = "repost"
     DISLIKE_POST = "dislike_post"
     FOLLOW = "follow"
+    REFRESH = "refresh"
+    CREATE_POST = "create_post"
+    QUOTE_POST = "quote_post"
+    CREATE_COMMENT = "create_comment"
 
 
 class LLMAction:
@@ -54,8 +58,11 @@ class Answer:
 
 
 class Response:
-    def __init__(self, action: Answer, target: Answer):
-        self.choices = {"action": action, "target": target}
+    def __init__(self, action=None, target=None, *, choices=None):
+        if choices is not None:
+            self.choices = choices
+        else:
+            self.choices = {"action": action, "target": target}
 
 
 class FakeClient:
@@ -101,12 +108,30 @@ def _create_social_db(path: str):
 
 
 def _engine(response):
-    engine = runtime.JevDecisionEngine(Legacy, {"agent_configs": [{"agent_id": 1, "persona": "developer"}]})
+    engine = runtime.JevDecisionEngine(
+        Legacy,
+        {"agent_configs": [{"agent_id": 1, "persona": "developer"}]},
+    )
     engine.mode = "hybrid"
+    engine.policy_mode = "multi"
     engine.api_key = "test-key"
+    engine.threshold = 0.58
     engine.sample_probabilities = False
     engine._client = FakeClient(response)
     return engine
+
+
+def _yes(confidence=0.95):
+    return Answer("yes", confidence, {"yes": confidence, "no": 1 - confidence})
+
+
+def _no(confidence=0.95):
+    return Answer("no", confidence, {"yes": 1 - confidence, "no": confidence})
+
+
+def _target(post_id=7, confidence=0.96):
+    key = f"post_{post_id}"
+    return Answer(key, confidence, {key: confidence, "none": 1 - confidence})
 
 
 def test_jev_can_replace_llm_action_with_direct_like():
@@ -120,7 +145,9 @@ def test_jev_can_replace_llm_action_with_direct_like():
     with tempfile.TemporaryDirectory() as directory:
         db_path = os.path.join(directory, "sim.db")
         _create_social_db(db_path)
-        action = asyncio.run(engine.decide(Agent(1), db_path=db_path, platform="twitter"))
+        action = asyncio.run(
+            engine.decide(Agent(1), db_path=db_path, platform="twitter")
+        )
 
     assert isinstance(action, ManualAction)
     assert action.action_type is ActionType.LIKE_POST
@@ -140,7 +167,9 @@ def test_low_confidence_routes_back_to_system_two_llm():
     with tempfile.TemporaryDirectory() as directory:
         db_path = os.path.join(directory, "sim.db")
         _create_social_db(db_path)
-        action = asyncio.run(engine.decide(Agent(1), db_path=db_path, platform="twitter"))
+        action = asyncio.run(
+            engine.decide(Agent(1), db_path=db_path, platform="twitter")
+        )
 
     assert isinstance(action, LLMAction)
     assert engine.stats["llm_fallbacks"] == 1
@@ -157,7 +186,9 @@ def test_follow_maps_selected_post_author_to_followee_id():
     with tempfile.TemporaryDirectory() as directory:
         db_path = os.path.join(directory, "sim.db")
         _create_social_db(db_path)
-        action = asyncio.run(engine.decide(Agent(1), db_path=db_path, platform="twitter"))
+        action = asyncio.run(
+            engine.decide(Agent(1), db_path=db_path, platform="twitter")
+        )
 
     assert isinstance(action, ManualAction)
     assert action.action_type is ActionType.FOLLOW
@@ -167,7 +198,153 @@ def test_follow_maps_selected_post_author_to_followee_id():
 def test_llm_mode_is_exact_baseline_passthrough():
     engine = runtime.JevDecisionEngine(Legacy, {})
     engine.mode = "llm"
-    action = asyncio.run(engine.decide(Agent(1), db_path="missing.db", platform="twitter"))
+    action = asyncio.run(
+        engine.decide(Agent(1), db_path="missing.db", platform="twitter")
+    )
 
     assert isinstance(action, LLMAction)
     assert engine.stats["llm_fallbacks"] == 1
+
+
+def test_multi_policy_emits_multiple_targeted_actions_from_one_jev_plan():
+    _install_fake_typesafe_module()
+    response = Response(
+        choices={
+            "refresh": _no(),
+            "like": _yes(0.96),
+            "like_target": _target(confidence=0.98),
+            "follow": _yes(0.91),
+            "follow_target": _target(confidence=0.95),
+            "repost": _yes(0.89),
+            "repost_target": _target(confidence=0.93),
+            "quote": _no(),
+            "quote_target": _target(),
+            "create_post": _no(),
+        }
+    )
+    engine = _engine(response)
+    engine.max_actions = 3
+
+    with tempfile.TemporaryDirectory() as directory:
+        db_path = os.path.join(directory, "sim.db")
+        _create_social_db(db_path)
+        actions = asyncio.run(
+            engine.decide_bundle(Agent(1), db_path=db_path, platform="twitter")
+        )
+
+    assert isinstance(actions, list)
+    assert len(actions) == 3
+    assert {action.action_type for action in actions} == {
+        ActionType.LIKE_POST,
+        ActionType.FOLLOW,
+        ActionType.REPOST,
+    }
+    assert all(isinstance(action, ManualAction) for action in actions)
+    assert engine.stats["jev_calls"] == 1
+    assert engine.stats["jev_plans"] == 1
+    assert engine.stats["multi_action_agents"] == 1
+    assert engine.stats["jev_manual_actions"] == 3
+    assert engine.stats["llm_fallbacks"] == 0
+
+
+def test_multi_policy_materializes_language_after_jev_selects_create_post():
+    _install_fake_typesafe_module()
+    response = Response(
+        choices={
+            "refresh": _no(),
+            "like": _no(),
+            "like_target": _target(),
+            "follow": _no(),
+            "follow_target": _target(),
+            "repost": _no(),
+            "repost_target": _target(),
+            "quote": _no(),
+            "quote_target": _target(),
+            "create_post": _yes(0.97),
+        }
+    )
+    engine = _engine(response)
+
+    async def fake_generate_text(**kwargs):
+        return "Benchmarks first; claims second."
+
+    engine._generate_text = fake_generate_text
+
+    with tempfile.TemporaryDirectory() as directory:
+        db_path = os.path.join(directory, "sim.db")
+        _create_social_db(db_path)
+        actions = asyncio.run(
+            engine.decide_bundle(Agent(1), db_path=db_path, platform="twitter")
+        )
+
+    assert isinstance(actions, list)
+    assert len(actions) == 1
+    assert actions[0].action_type is ActionType.CREATE_POST
+    assert actions[0].action_args == {"content": "Benchmarks first; claims second."}
+    assert engine.stats["llm_fallbacks"] == 0
+    assert engine.stats["selected_by_type"]["create_post"] == 1
+
+
+def test_multi_policy_uses_llm_only_when_all_selected_behavior_is_uncertain():
+    _install_fake_typesafe_module()
+    response = Response(
+        choices={
+            "refresh": _no(),
+            "like": _yes(0.54),
+            "like_target": _target(confidence=0.99),
+            "follow": _no(),
+            "follow_target": _target(),
+            "repost": _no(),
+            "repost_target": _target(),
+            "quote": _no(),
+            "quote_target": _target(),
+            "create_post": _no(),
+        }
+    )
+    engine = _engine(response)
+
+    with tempfile.TemporaryDirectory() as directory:
+        db_path = os.path.join(directory, "sim.db")
+        _create_social_db(db_path)
+        action = asyncio.run(
+            engine.decide_bundle(Agent(1), db_path=db_path, platform="twitter")
+        )
+
+    assert isinstance(action, LLMAction)
+    assert engine.stats["uncertain_gates"] >= 1
+    assert engine.stats["llm_escalations"] == 1
+
+
+def test_transform_actions_uses_multi_policy_bundles_by_default():
+    _install_fake_typesafe_module()
+    response = Response(
+        choices={
+            "refresh": _no(),
+            "like": _yes(0.96),
+            "like_target": _target(),
+            "follow": _no(),
+            "follow_target": _target(),
+            "repost": _yes(0.90),
+            "repost_target": _target(),
+            "quote": _no(),
+            "quote_target": _target(),
+            "create_post": _no(),
+        }
+    )
+    engine = _engine(response)
+
+    agent = Agent(1)
+    with tempfile.TemporaryDirectory() as directory:
+        db_path = os.path.join(directory, "sim.db")
+        _create_social_db(db_path)
+        transformed = asyncio.run(
+            engine.transform_actions(
+                {agent: LLMAction()},
+                db_path=db_path,
+                platform="twitter",
+            )
+        )
+
+    assert isinstance(transformed[agent], list)
+    assert len(transformed[agent]) == 2
+    assert engine.stats["multi_action_agents"] == 1
