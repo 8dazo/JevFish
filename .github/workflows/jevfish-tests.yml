@@ -9,8 +9,7 @@ on:
       - "backend/scripts/jevfish_observation.py"
       - "backend/scripts/jevfish_reproducibility.py"
       - "backend/scripts/run_*simulation*.py"
-      - "benchmarks/jevfish_ab.py"
-      - "benchmarks/calibrate_thresholds.py"
+      - "benchmarks/*.py"
       - "tests/test_jevfish_*.py"
       - "backend/requirements.txt"
       - ".github/workflows/jevfish-tests.yml"
@@ -24,8 +23,7 @@ on:
       - "backend/scripts/jevfish_observation.py"
       - "backend/scripts/jevfish_reproducibility.py"
       - "backend/scripts/run_*simulation*.py"
-      - "benchmarks/jevfish_ab.py"
-      - "benchmarks/calibrate_thresholds.py"
+      - "benchmarks/*.py"
       - "tests/test_jevfish_*.py"
       - ".github/workflows/jevfish-tests.yml"
 
@@ -41,5 +39,5 @@ jobs:
         with:
           python-version: "3.11"
       - run: python -m pip install --upgrade pip pytest
-      - run: python -m pytest -q tests/test_jevfish_runtime.py tests/test_jevfish_system_two.py tests/test_jevfish_policy_calibration.py tests/test_jevfish_observation.py tests/test_jevfish_reproducibility.py tests/test_jevfish_benchmark.py tests/test_jevfish_calibration.py
-      - run: python -m py_compile backend/scripts/jevfish_runtime.py backend/scripts/jevfish_system_two.py backend/scripts/jevfish_policy_calibration.py backend/scripts/jevfish_observation.py backend/scripts/jevfish_reproducibility.py backend/scripts/run_parallel_simulation.py backend/scripts/run_twitter_simulation.py backend/scripts/run_reddit_simulation.py benchmarks/jevfish_ab.py benchmarks/calibrate_thresholds.py
+      - run: python -m pytest -q tests/test_jevfish_*.py
+      - run: python -m py_compile backend/scripts/jevfish_runtime.py backend/scripts/jevfish_system_two.py backend/scripts/jevfish_policy_calibration.py backend/scripts/jevfish_observation.py backend/scripts/jevfish_reproducibility.py backend/scripts/run_parallel_simulation.py backend/scripts/run_twitter_simulation.py backend/scripts/run_reddit_simulation.py benchmarks/jevfish_ab.py benchmarks/calibrate_thresholds.py benchmarks/repeated_trials.py
