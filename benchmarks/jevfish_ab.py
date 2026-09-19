@@ -3,8 +3,8 @@
 
 Both arms start from the same synthetic society and seed posts. The benchmark
 uses the production OASIS Twitter entrypoint, persists each SQLite world, and
-reports runtime, expensive model turns, action distributions, and a simple
-distribution-similarity score.
+reports runtime, expensive model requests/turns, action distributions, and a
+simple distribution-similarity score.
 
 Important: these are simulation-model measurements, not probabilities about
 the real world.
@@ -366,23 +366,33 @@ def compare(
         llm["database"].get("trace_actions", {})
     )
 
-    hybrid_expensive_turns = (
-        int(hybrid_metrics.get("llm_fallbacks", 0))
-        + int(hybrid_metrics.get("system_two_calls", 0))
+    full_llm_turns = int(hybrid_metrics.get("llm_fallbacks", 0))
+    system_two_successes = int(hybrid_metrics.get("system_two_calls", 0))
+    system_two_errors = int(hybrid_metrics.get("system_two_errors", 0))
+    system_two_requests = int(
+        hybrid_metrics.get(
+            "system_two_requests",
+            system_two_successes + system_two_errors,
+        )
     )
+    hybrid_expensive_requests_or_turns = full_llm_turns + system_two_requests
     baseline_llm_turns = int(llm_metrics.get("llm_fallbacks", 0))
-    avoided = max(0, baseline_llm_turns - hybrid_expensive_turns)
+    expensive_delta = baseline_llm_turns - hybrid_expensive_requests_or_turns
 
     hybrid_time = hybrid.get("loop_seconds") or hybrid["elapsed_seconds"]
     llm_time = llm.get("loop_seconds") or llm["elapsed_seconds"]
 
     return {
         "agent_rounds": agents * rounds,
-        "hybrid_expensive_model_turns": hybrid_expensive_turns,
+        "hybrid_full_llm_agent_turns": full_llm_turns,
+        "hybrid_system_two_requests": system_two_requests,
+        "hybrid_system_two_successes": system_two_successes,
+        "hybrid_system_two_errors": system_two_errors,
+        "hybrid_expensive_model_requests_or_turns": hybrid_expensive_requests_or_turns,
         "baseline_llm_agent_turns": baseline_llm_turns,
-        "expensive_turns_avoided": avoided,
-        "expensive_turns_avoided_pct": (
-            round(100 * avoided / baseline_llm_turns, 2)
+        "expensive_request_or_turn_delta": expensive_delta,
+        "expensive_request_or_turn_reduction_pct": (
+            round(100 * expensive_delta / baseline_llm_turns, 2)
             if baseline_llm_turns
             else None
         ),
@@ -404,8 +414,11 @@ def compare(
         "hybrid_like_actions": hybrid_actions.get("like_post", 0),
         "llm_like_actions": llm_actions.get("like_post", 0),
         "note": (
-            "Action-distribution similarity is descriptive agreement between "
-            "these two simulation policies, not real-world predictive accuracy."
+            "A constrained System-Two request and a full OASIS LLM agent turn "
+            "are different workloads, so request/turn counts are reported "
+            "separately as well as combined. Action-distribution similarity "
+            "is descriptive agreement between these two simulation policies, "
+            "not real-world predictive accuracy."
         ),
     }
 
