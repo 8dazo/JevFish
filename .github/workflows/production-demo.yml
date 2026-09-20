@@ -10,6 +10,7 @@ on:
       - "backend/wsgi.py"
       - "backend/requirements.txt"
       - "frontend/**"
+      - "locales/**"
       - ".github/workflows/production-demo.yml"
   push:
     branches: [main]
@@ -21,6 +22,7 @@ on:
       - "backend/wsgi.py"
       - "backend/requirements.txt"
       - "frontend/**"
+      - "locales/**"
       - ".github/workflows/production-demo.yml"
 
 permissions:
@@ -63,7 +65,46 @@ jobs:
           context: .
           file: ./Dockerfile
           push: false
-          load: false
+          load: true
           platforms: linux/amd64
+          tags: jevfish:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
+      - name: Boot production image and probe runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run -d --name jevfish-ci -p 5001:5001 \
+            -e APP_ENV=production \
+            -e SECRET_KEY=0123456789abcdef0123456789abcdef \
+            -e LLM_API_KEY=ci-placeholder \
+            -e LLM_BASE_URL=https://example.invalid/v1 \
+            -e LLM_MODEL_NAME=ci-model \
+            -e ZEP_API_KEY=ci-placeholder \
+            -e TYPESAFE_API_KEY=ci-placeholder \
+            -e TYPESAFE_DEFAULT_MODEL=jev-latest \
+            -e JEVFISH_DECISION_ENGINE=hybrid \
+            -e JEVFISH_OBSERVATION_MODE=oasis_refresh \
+            jevfish:ci
+
+          cleanup() {
+            docker logs jevfish-ci || true
+            docker rm -f jevfish-ci >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:5001/healthz >/tmp/health.json; then
+              break
+            fi
+            if ! docker inspect -f '{{.State.Running}}' jevfish-ci | grep -q true; then
+              echo "Container exited before becoming healthy" >&2
+              exit 1
+            fi
+            sleep 2
+          done
+
+          curl --fail --silent http://127.0.0.1:5001/healthz | tee /tmp/health.json
+          curl --fail --silent http://127.0.0.1:5001/readyz | tee /tmp/ready.json
+          curl --fail --silent http://127.0.0.1:5001/api/system/status | tee /tmp/status.json
+          curl --fail --silent http://127.0.0.1:5001/simulation/demo/start | grep -q '<div id="app"></div>'
