@@ -1,0 +1,47 @@
+services:
+  - type: web
+    name: jevfish
+    runtime: docker
+    plan: starter
+    numInstances: 1
+    healthCheckPath: /healthz
+    maxShutdownDelaySeconds: 60
+    disk:
+      name: jevfish-data
+      mountPath: /app/backend/uploads
+      sizeGB: 10
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: FLASK_DEBUG
+        value: "false"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: TYPESAFE_API_KEY
+        sync: false
+      - key: TYPESAFE_DEFAULT_MODEL
+        value: jev-latest
+      - key: LLM_API_KEY
+        sync: false
+      - key: LLM_BASE_URL
+        sync: false
+      - key: LLM_MODEL_NAME
+        sync: false
+      - key: ZEP_API_KEY
+        sync: false
+      - key: JEVFISH_DECISION_ENGINE
+        value: hybrid
+      - key: JEVFISH_OBSERVATION_MODE
+        value: oasis_refresh
+      - key: JEVFISH_SAMPLE_PROBABILITIES
+        value: "false"
+      - key: MAX_CONCURRENT_SIMULATIONS
+        value: "2"
+      - key: DEMO_STARTS_PER_MINUTE
+        value: "4"
+      - key: DEMO_MUTATIONS_PER_MINUTE
+        value: "20"
+      - key: GUNICORN_THREADS
+        value: "8"
+      - key: GUNICORN_TIMEOUT
+        value: "600"
