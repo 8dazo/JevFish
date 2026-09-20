@@ -3,7 +3,6 @@
 import json
 import os
 import re
-from collections import Counter
 
 from flask import jsonify
 
@@ -31,12 +30,14 @@ def _active_simulations() -> int:
     )
 
 
-def _merge_counts(target: Counter, source: dict | None) -> None:
+def _merge_max_counts(target: dict[str, float], source: dict | None) -> None:
+    """Merge a cumulative shared-engine snapshot without double-counting it."""
     if not isinstance(source, dict):
         return
     for key, value in source.items():
         if isinstance(value, (int, float)):
-            target[str(key)] += value
+            name = str(key)
+            target[name] = max(float(target.get(name, 0)), float(value))
 
 
 @system_bp.route('/status', methods=['GET'])
@@ -61,7 +62,13 @@ def system_status():
 
 @system_bp.route('/simulations/<simulation_id>/metrics', methods=['GET'])
 def simulation_metrics(simulation_id: str):
-    """Aggregate JevFish metrics written by one or both OASIS platforms."""
+    """Return the latest cumulative JevFish snapshot for a simulation.
+
+    Parallel Twitter/Reddit environments share one JevDecisionEngine in the
+    current runner. Each platform file is therefore a snapshot of the same
+    monotonic counters at a different instant. Taking the maximum per counter
+    yields the latest shared total; summing the files would double-count work.
+    """
     if not _SIMULATION_ID.fullmatch(simulation_id):
         return jsonify({'success': False, 'error': 'Invalid simulation id'}), 400
 
@@ -94,32 +101,49 @@ def simulation_metrics(simulation_id: str):
         'observation_fallbacks',
         'observation_errors',
     )
-    totals = {field: 0 for field in numeric_fields}
-    manual_by_type: Counter = Counter()
-    system_two_by_type: Counter = Counter()
-    selected_by_type: Counter = Counter()
+    totals: dict[str, float] = {field: 0 for field in numeric_fields}
+    manual_by_type: dict[str, float] = {}
+    system_two_by_type: dict[str, float] = {}
+    selected_by_type: dict[str, float] = {}
 
     for metrics in platform_metrics.values():
         for field in numeric_fields:
             value = metrics.get(field, 0)
             if isinstance(value, (int, float)):
-                totals[field] += value
-        _merge_counts(manual_by_type, metrics.get('manual_by_type'))
-        _merge_counts(system_two_by_type, metrics.get('system_two_by_type'))
-        _merge_counts(selected_by_type, metrics.get('selected_by_type'))
+                totals[field] = max(float(totals[field]), float(value))
+        _merge_max_counts(manual_by_type, metrics.get('manual_by_type'))
+        _merge_max_counts(system_two_by_type, metrics.get('system_two_by_type'))
+        _merge_max_counts(selected_by_type, metrics.get('selected_by_type'))
 
-    jev_calls = int(totals['jev_calls'])
-    full_llm_turns = int(totals['llm_fallbacks'])
+    normalized_totals = {
+        field: int(value) if float(value).is_integer() else value
+        for field, value in totals.items()
+    }
+    normalized_manual = {
+        key: int(value) if float(value).is_integer() else value
+        for key, value in manual_by_type.items()
+    }
+    normalized_system_two = {
+        key: int(value) if float(value).is_integer() else value
+        for key, value in system_two_by_type.items()
+    }
+    normalized_selected = {
+        key: int(value) if float(value).is_integer() else value
+        for key, value in selected_by_type.items()
+    }
+
+    jev_calls = int(normalized_totals['jev_calls'])
+    full_llm_turns = int(normalized_totals['llm_fallbacks'])
     system_one_turns = max(jev_calls - full_llm_turns, 0)
     system_one_share = round(system_one_turns / jev_calls * 100, 1) if jev_calls else 0.0
 
     data = {
-        **totals,
+        **normalized_totals,
         'system_one_turns': system_one_turns,
         'system_one_share_pct': system_one_share,
-        'manual_by_type': dict(manual_by_type),
-        'system_two_by_type': dict(system_two_by_type),
-        'selected_by_type': dict(selected_by_type),
+        'manual_by_type': normalized_manual,
+        'system_two_by_type': normalized_system_two,
+        'selected_by_type': normalized_selected,
         'platforms': platform_metrics,
         'runner_status': run_state.get('runner_status', 'unknown'),
         'current_round': run_state.get('current_round', 0),
