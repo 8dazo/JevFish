@@ -39,6 +39,9 @@ RUN python -m pip install --no-cache-dir --upgrade pip \
     && rm -rf /root/.cache/pip
 
 COPY backend/ ./backend/
+# Backend locale helpers resolve ../../.. /locales relative to app/utils, so the
+# shared registry must also exist in the final runtime image at /app/locales.
+COPY locales/ ./locales/
 COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
 
 RUN mkdir -p /app/backend/uploads/simulations
