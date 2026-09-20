@@ -5,6 +5,8 @@ WORKDIR /app/frontend
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 COPY frontend/ ./
+# frontend/src/i18n imports the repository-level shared locale registry.
+COPY locales/ /app/locales/
 RUN npm run build
 
 
