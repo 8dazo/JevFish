@@ -104,11 +104,10 @@ def create_app(config_class=Config):
     )
     has_frontend = os.path.isfile(os.path.join(frontend_dist, 'index.html'))
 
-    app = Flask(
-        __name__,
-        static_folder=frontend_dist if has_frontend else None,
-        static_url_path='' if has_frontend else None,
-    )
+    # Static routing is handled explicitly below so Vue history-mode deep links
+    # reliably fall back to index.html instead of being intercepted by Flask's
+    # built-in catch-all static route.
+    app = Flask(__name__, static_folder=None)
     app.config.from_object(config_class)
 
     if hasattr(app, 'json') and hasattr(app.json, 'ensure_ascii'):
