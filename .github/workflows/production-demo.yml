@@ -9,6 +9,8 @@ on:
       - "backend/app/**"
       - "backend/wsgi.py"
       - "backend/requirements.txt"
+      - "backend/scripts/jevfish_live_metrics.py"
+      - "backend/scripts/run_*simulation*.py"
       - "frontend/**"
       - "locales/**"
       - ".github/workflows/production-demo.yml"
@@ -21,6 +23,8 @@ on:
       - "backend/app/**"
       - "backend/wsgi.py"
       - "backend/requirements.txt"
+      - "backend/scripts/jevfish_live_metrics.py"
+      - "backend/scripts/run_*simulation*.py"
       - "frontend/**"
       - "locales/**"
       - ".github/workflows/production-demo.yml"
@@ -47,7 +51,8 @@ jobs:
             backend/wsgi.py \
             backend/app/config.py \
             backend/app/__init__.py \
-            backend/app/api/system.py
+            backend/app/api/system.py \
+            backend/scripts/jevfish_live_metrics.py
       - name: Build frontend
         working-directory: frontend
         run: |
