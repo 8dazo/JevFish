@@ -1,10 +1,12 @@
 <template>
   <router-view />
+  <DemoStarter />
   <CognitiveRouterPanel />
 </template>
 
 <script setup>
 import CognitiveRouterPanel from './components/CognitiveRouterPanel.vue'
+import DemoStarter from './components/DemoStarter.vue'
 </script>
 
 <style>
